@@ -15,7 +15,8 @@ const WorkflowsSchema = new mongoose.Schema({
     cronPath: { type: String },
     publish: { type: Boolean, default: false },
     description: { type: String, required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    chat: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }]
   });
   
 export const Workflows = mongoose.model('Workflows', WorkflowsSchema);
