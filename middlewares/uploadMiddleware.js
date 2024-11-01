@@ -2,37 +2,57 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = 'uploads/pdfs';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
+const createMulterUpload = (fileType) => {
+  const uploadDir = `uploads/${fileType}s`;
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF files are allowed!'));
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
   }
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+  });
+
+  const mimeTypes = {
+    pdf: 'application/pdf',
+    csv: ['text/csv', 'application/vnd.ms-excel']
+  };
+
+  const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = mimeTypes[fileType];
+    if (Array.isArray(allowedMimeTypes)) {
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Only ${fileType.toUpperCase()} files are allowed!`));
+      }
+    } else {
+      if (file.mimetype === allowedMimeTypes) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Only ${fileType.toUpperCase()} files are allowed!`));
+      }
+    }
+  };
+
+  return multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 20 * 1024 * 1024,
+      files: 10
+    }
+  });
 };
 
-export const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 20 * 1024 * 1024,
-    files: 10 
-  }
-});
-
+export const pdfUpload = createMulterUpload('pdf');
+export const csvUpload = createMulterUpload('csv');
 
 export const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -66,5 +86,3 @@ export const handleUploadError = (err, req, res, next) => {
   }
   next();
 };
-
-
