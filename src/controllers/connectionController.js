@@ -1,7 +1,7 @@
-import {DiscordWebhook} from "../models/DiscordWebhook.js";
-import {Connections} from "../models/Connections.js";
-import {Notion} from "../models/Notion.js";
-import { Client } from '@notionhq/client';
+import { DiscordWebhook } from "../models/DiscordWebhook.js";
+import { Connections } from "../models/Connections.js";
+import { Notion } from "../models/Notion.js";
+import { Client } from "@notionhq/client";
 import { Slack } from "../models/Slack.js";
 import { User } from "../models/User.js";
 import axios from "axios";
@@ -105,33 +105,41 @@ export const getDiscordConnectionUrl = async (req, res) => {
 };
 
 export const postContentToWebHook = async (req, res) => {
-    const { content, url } = req.body;
-  
-    if (content) {
-      try {
-        const response = await axios.post(url, { content });
-        if (response.status === 200) {
-          res.status(200).json({ message: 'Success' });
-        } else {
-          res.status(500).json({ message: 'Failed to post content' });
-        }
-      } catch (error) {
-        res.status(500).json({ message: 'Request failed', error });
-      }
-    } else {
-      res.status(400).json({ message: 'Content is empty' });
-    }
-};
+  const { content, url } = req.body;
 
+  if (content) {
+    try {
+      const response = await axios.post(url, { content });
+      if (response.status === 200) {
+        res.status(200).json({ message: "Success" });
+      } else {
+        res.status(500).json({ message: "Failed to post content" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Request failed", error });
+    }
+  } else {
+    res.status(400).json({ message: "Content is empty" });
+  }
+};
 
 //Notion
 export const onNotionConnect = async (req, res) => {
-  const { access_token, workspace_id, workspace_icon, workspace_name, database_id, id } = req.body;
+  const {
+    access_token,
+    workspace_id,
+    workspace_icon,
+    workspace_name,
+    database_id,
+    id,
+  } = req.body;
 
   if (access_token) {
     try {
       // Check if Notion is already connected
-      const notionConnected = await Notion.findOne({ accessToken: access_token }).populate('connections');
+      const notionConnected = await Notion.findOne({
+        accessToken: access_token,
+      }).populate("connections");
 
       if (!notionConnected) {
         // Create new Notion connection
@@ -146,7 +154,7 @@ export const onNotionConnect = async (req, res) => {
 
         const newConnection = new Connections({
           userId: id,
-          type: 'Notion',
+          type: "Notion",
           notionId: newNotion._id,
         });
 
@@ -155,21 +163,21 @@ export const onNotionConnect = async (req, res) => {
         await newNotion.save();
         await newConnection.save();
 
-        res.status(200).json({ message: 'Notion connected successfully' });
+        res.status(200).json({ message: "Notion connected successfully" });
       } else {
-        res.status(200).json({ message: 'Notion is already connected' });
+        res.status(200).json({ message: "Notion is already connected" });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Failed to connect Notion', error });
+      res.status(500).json({ message: "Failed to connect Notion", error });
     }
   } else {
-    res.status(400).json({ message: 'Missing access token' });
+    res.status(400).json({ message: "Missing access token" });
   }
 };
 
 export const getNotionConnection = async (req, res) => {
   const id = req.params;
-  
+
   if (id) {
     try {
       const connection = await Notion.findOne({ user: id });
@@ -177,13 +185,15 @@ export const getNotionConnection = async (req, res) => {
       if (connection) {
         res.status(200).json(connection);
       } else {
-        res.status(404).json({ message: 'No Notion connection found' });
+        res.status(404).json({ message: "No Notion connection found" });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Failed to retrieve Notion connection', error });
+      res
+        .status(500)
+        .json({ message: "Failed to retrieve Notion connection", error });
     }
   } else {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(401).json({ message: "Unauthorized" });
   }
 };
 
@@ -193,10 +203,14 @@ export const getNotionDatabase = async (req, res) => {
   const notion = new Client({ auth: accessToken });
 
   try {
-    const response = await notion.databases.retrieve({ database_id: databaseId });
+    const response = await notion.databases.retrieve({
+      database_id: databaseId,
+    });
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to retrieve Notion database', error });
+    res
+      .status(500)
+      .json({ message: "Failed to retrieve Notion database", error });
   }
 };
 
@@ -208,7 +222,7 @@ export const onCreateNewPageInDatabase = async (req, res) => {
   try {
     const response = await notion.pages.create({
       parent: {
-        type: 'database_id',
+        type: "database_id",
         database_id: databaseId,
       },
       properties: {
@@ -225,10 +239,12 @@ export const onCreateNewPageInDatabase = async (req, res) => {
     if (response) {
       res.status(200).json(response);
     } else {
-      res.status(500).json({ message: 'Failed to create a new page in the database' });
+      res
+        .status(500)
+        .json({ message: "Failed to create a new page in the database" });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create a new page', error });
+    res.status(500).json({ message: "Failed to create a new page", error });
   }
 };
 
@@ -245,11 +261,14 @@ export const onSlackConnect = async (req, res) => {
     user_id,
   } = req.body;
 
-  if (!slack_access_token) return res.status(400).json({ message: 'Slack access token missing' });
+  if (!slack_access_token)
+    return res.status(400).json({ message: "Slack access token missing" });
 
   try {
     // Check if Slack connection already exists
-    const slackConnection = await Slack.findOne({ slackAccessToken: slack_access_token }).populate('connections');
+    const slackConnection = await Slack.findOne({
+      slackAccessToken: slack_access_token,
+    }).populate("connections");
 
     if (!slackConnection) {
       // Create new Slack connection
@@ -266,7 +285,7 @@ export const onSlackConnect = async (req, res) => {
 
       const newConnection = new Connections({
         userId: user_id,
-        type: 'Slack',
+        type: "Slack",
         slackId: newSlackConnection._id,
       });
 
@@ -275,28 +294,30 @@ export const onSlackConnect = async (req, res) => {
       await newSlackConnection.save();
       await newConnection.save();
 
-      res.status(200).json({ message: 'Slack connected successfully' });
+      res.status(200).json({ message: "Slack connected successfully" });
     } else {
-      res.status(200).json({ message: 'Slack is already connected' });
+      res.status(200).json({ message: "Slack is already connected" });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Failed to connect Slack', error });
+    res.status(500).json({ message: "Failed to connect Slack", error });
   }
 };
 
 export const getSlackConnection = async (req, res) => {
   const id = req.params;
-  if (!id) return res.status(401).json({ message: 'Unauthorized' });
+  if (!id) return res.status(401).json({ message: "Unauthorized" });
   try {
     const slackConnection = await Slack.findOne({ user: id });
 
     if (!slackConnection) {
-      res.status(404).json({ message: 'No Slack connection found' });
+      res.status(404).json({ message: "No Slack connection found" });
     } else {
       res.status(200).json(slackConnection);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Failed to retrieve Slack connection', error });
+    res
+      .status(500)
+      .json({ message: "Failed to retrieve Slack connection", error });
   }
 };
 
@@ -304,8 +325,8 @@ export const listBotChannels = async (req, res) => {
   const { slackAccessToken } = req.body;
 
   const url = `https://slack.com/api/conversations.list?${new URLSearchParams({
-    types: 'public_channel,private_channel',
-    limit: '200',
+    types: "public_channel,private_channel",
+    limit: "200",
   })}`;
 
   try {
@@ -324,19 +345,25 @@ export const listBotChannels = async (req, res) => {
 
     res.status(200).json(channels);
   } catch (error) {
-    res.status(500).json({ message: 'Error listing bot channels', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error listing bot channels", error: error.message });
   }
 };
 
-export const postMessageInSlackChannel = async (slackAccessToken, slackChannel, content) => {
+export const postMessageInSlackChannel = async (
+  slackAccessToken,
+  slackChannel,
+  content
+) => {
   try {
     const response = await axios.post(
-      'https://slack.com/api/chat.postMessage',
+      "https://slack.com/api/chat.postMessage",
       { channel: slackChannel, text: content },
       {
         headers: {
           Authorization: `Bearer ${slackAccessToken}`,
-          'Content-Type': 'application/json;charset=utf-8',
+          "Content-Type": "application/json;charset=utf-8",
         },
       }
     );
@@ -344,27 +371,36 @@ export const postMessageInSlackChannel = async (slackAccessToken, slackChannel, 
     if (response.data.ok) {
       console.log(`Message posted successfully to channel ID: ${slackChannel}`);
     } else {
-      console.error(`Error posting message to Slack channel ${slackChannel}:`, response.data.error);
+      console.error(
+        `Error posting message to Slack channel ${slackChannel}:`,
+        response.data.error
+      );
     }
   } catch (error) {
-    console.error(`Error posting message to Slack channel ${slackChannel}:`, error.message);
+    console.error(
+      `Error posting message to Slack channel ${slackChannel}:`,
+      error.message
+    );
   }
 };
 
 export const postMessageToSlack = async (req, res) => {
   const { slackAccessToken, selectedSlackChannels, content } = req.body;
 
-  if (!content) return res.status(400).json({ message: 'Content is empty' });
-  if (!selectedSlackChannels?.length) return res.status(400).json({ message: 'Channel not selected' });
+  if (!content) return res.status(400).json({ message: "Content is empty" });
+  if (!selectedSlackChannels?.length)
+    return res.status(400).json({ message: "Channel not selected" });
 
   try {
     selectedSlackChannels.forEach(async (channel) => {
       await postMessageInSlackChannel(slackAccessToken, channel.value, content);
     });
 
-    res.status(200).json({ message: 'Success' });
+    res.status(200).json({ message: "Success" });
   } catch (error) {
-    res.status(500).json({ message: 'Message could not be sent to Slack', error });
+    res
+      .status(500)
+      .json({ message: "Message could not be sent to Slack", error });
   }
 };
 
@@ -373,17 +409,17 @@ export const getUserData = async (req, res) => {
 
   try {
     // console.log("id::>",id);
-    
-    const user_info = await User.findOne({ clerkId: id }).populate('connections');
+
+    const user_info = await User.findOne({ clerkId: id }).populate(
+      "connections"
+    );
 
     if (!user_info) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json(user_info);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch user data', error });
+    res.status(500).json({ message: "Failed to fetch user data", error });
   }
 };
-
-
