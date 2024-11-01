@@ -3,10 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-import userRoutes from "./routes/userRoutes.js"
-import connectionRoutes from "./routes/connectionRoutes.js"
-import workFlowRoutes from "./routes/workFlowRoutes.js"
-import uploadRoutes from "./routes/uploadRoutes.js"
+import userRoutes from "./src/routes/userRoutes.js";
+import connectionRoutes from "./src/routes/connectionRoutes.js";
+import workFlowRoutes from "./src/routes/workFlowRoutes.js";
+import uploadRoutes from "./src/routes/uploadRoutes.js";
 
 dotenv.config();
 
@@ -33,19 +33,15 @@ app.use(
   })
 );
 
-
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // Routes
-app.use('/api', userRoutes);
-app.use('/connection',connectionRoutes);
-app.use('/workflows',workFlowRoutes);
-app.use('/upload',uploadRoutes);
-
-
-
+app.use("/api", userRoutes);
+app.use("/connection", connectionRoutes);
+app.use("/workflows", workFlowRoutes);
+app.use("/upload", uploadRoutes);
 
 app.get("/", (req, res) => {
   res.json({ do: "SMILE", start: "Developing something great & keep :) :)" });
